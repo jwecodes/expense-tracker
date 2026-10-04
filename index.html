@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Expense Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#f7f0e6; --bg2:#eadbc8; --card:rgba(255,251,245,.78); --text:#3a261a; --muted:#9a7b66;
+    --accent:#8b5a3c; --accent2:#e0b48a; --accent3:#5e3a24; --line:rgba(139,90,60,.16); --input:rgba(255,253,249,.95);
+    --shadow:0 12px 40px rgba(94,58,36,.15); --btn-shadow:rgba(139,90,60,.32);
+  }
+  :root[data-theme="dark"]{
+    --bg1:#1d1410; --bg2:#150e0b; --card:rgba(48,34,26,.72); --text:#f3e7da; --muted:#b39a87;
+    --accent:#c98a5a; --accent2:#e8c39b; --accent3:#8b5a3c; --line:rgba(232,195,155,.13); --input:rgba(21,14,11,.6);
+    --shadow:0 12px 40px rgba(0,0,0,.4); --btn-shadow:rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;margin:0}
+  body{font-family:'Poppins',system-ui,sans-serif;color:var(--text);min-height:100vh;padding:28px 16px 40px;
+    background:var(--bg1);position:relative;overflow-x:hidden}
+  body::before,body::after{content:"";position:fixed;border-radius:50%;filter:blur(70px);z-index:-1;opacity:.55}
+  body::before{width:320px;height:320px;background:var(--accent2);top:-90px;right:-80px}
+  body::after{width:300px;height:300px;background:var(--accent);bottom:-100px;left:-90px;opacity:.28}
+  .wrap{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+  header{display:flex;justify-content:space-between;align-items:center}
+  h1{font-family:'Fraunces',serif;font-size:26px;letter-spacing:-.5px}
+  .sub{color:var(--muted);font-size:13px;margin-top:2px}
+  .theme{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);
+    backdrop-filter:blur(12px);cursor:pointer;font-size:18px;box-shadow:var(--shadow)}
+  .card{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);
+    border-radius:24px;padding:22px;box-shadow:var(--shadow)}
+  .total{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;border:0;position:relative;overflow:hidden}
+  .total::after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;
+    background:rgba(255,255,255,.14);right:-50px;top:-60px}
+  .total small{opacity:.85;font-size:12px;letter-spacing:1.5px;text-transform:uppercase}
+  .total .amt{font-family:'Fraunces',serif;font-size:44px;margin-top:6px;position:relative}
+  .total .count{font-size:12px;opacity:.8;margin-top:2px}
+  .row{display:flex;gap:10px;margin-bottom:10px}
+  input,select{width:100%;padding:13px 15px;border-radius:14px;border:1.5px solid var(--line);
+    background:var(--input);color:var(--text);font:inherit;font-size:14px;outline:none;transition:.2s}
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--line)}
+  button.add{width:100%;padding:14px;border:0;border-radius:14px;color:#fff;font:inherit;font-weight:500;
+    cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent3));box-shadow:0 8px 20px var(--btn-shadow);transition:.15s}
+  button.add:hover{transform:translateY(-1px)}
+  button.add:active{transform:scale(.98)}
+  h2{font-size:12px;font-weight:600;margin-bottom:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+  .bar{margin-bottom:14px}
+  .bar .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+  .track{height:9px;background:var(--line);border-radius:99px;overflow:hidden}
+  .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s}
+  .item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .item:last-child{border:0;padding-bottom:0}
+  .ico{width:42px;height:42px;border-radius:14px;background:var(--line);display:grid;place-items:center;font-size:19px}
+  .info{flex:1;min-width:0}
+  .info b{font-weight:500;font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .info span{font-size:12px;color:var(--muted)}
+  .price{font-weight:600;font-size:14px}
+  .del{background:none;border:0;color:var(--muted);cursor:pointer;font-size:15px;padding:4px;opacity:.6}
+  .del:hover{color:#e5484d;opacity:1}
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:8px 0}
+  .clear{background:none;border:0;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline}
+  .month{display:flex;align-items:center;justify-content:space-between;background:var(--card);backdrop-filter:blur(14px);
+    border:1px solid var(--line);border-radius:18px;padding:8px;box-shadow:var(--shadow)}
+  .month b{font-weight:500;font-size:15px}
+  .month button{width:38px;height:38px;border-radius:12px;border:0;background:var(--line);color:var(--text);font-size:16px;cursor:pointer}
+  .month button:disabled{opacity:.3;cursor:default}
+  .bhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .bhead h2{margin:0}
+  .link{background:none;border:0;color:var(--accent);font:inherit;font-size:12px;font-weight:500;cursor:pointer}
+  .bnum{font-size:13px;margin-top:8px;color:var(--muted)}
+  .fill.warn{background:linear-gradient(90deg,#d97706,#f2a93b)}
+  .fill.over{background:linear-gradient(90deg,#e5484d,#ff8a8f)}
+  .tools{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  #login{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center}
+  #login .card{width:100%;max-width:380px;text-align:center}
+  #login h1{margin-bottom:6px}
+  #login .sub{margin-bottom:20px}
+  #login input{margin-bottom:10px;text-align:center}
+  .err{color:#e5484d;font-size:12px;min-height:16px;margin-bottom:8px}
+  .hint{color:var(--muted);font-size:11px;margin-top:12px;line-height:1.5}
+  .who{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:13px;color:var(--muted)}
+  .who b{color:var(--text);font-weight:500}
+  [hidden]{display:none!important}
+  .del.ed:hover{color:var(--accent)}
+  :root[data-theme="dark"]{color-scheme:dark}
+  #modal{position:fixed;inset:0;background:rgba(40,22,12,.45);backdrop-filter:blur(3px);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+  #modal .card{width:100%;max-width:340px;background:var(--bg1);color:var(--text)}
+  #mtext{font-size:14px;margin-bottom:14px;line-height:1.5}
+  #modal input{margin-bottom:14px}
+  .mbtns{display:flex;justify-content:flex-end;align-items:center;gap:16px}
+  .mbtns .add{width:auto;padding:10px 22px}
+  .del.ed{font-size:12px;font-family:inherit;color:var(--accent);opacity:1}
+</style>
+</head>
+<body>
+<div id="modal" hidden><div class="card">
+  <div id="mtext"></div>
+  <input id="minput" type="text" hidden>
+  <div class="mbtns"><button class="link" id="mcancel">Cancel</button><button class="add" id="mok">OK</button></div>
+</div></div>
+
+<div id="login" hidden>
+  <div class="card">
+    <h1>☕ Welcome</h1>
+    <div class="sub">Type your name to open your own expenses</div>
+    <input id="uname" type="text" placeholder="Your name" maxlength="30" autocomplete="off">
+    <input id="upin" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN (optional)">
+    <div class="err" id="err"></div>
+    <button class="add" id="goBtn">Continue</button>
+    <div class="hint">New name? A fresh profile is created. Set a PIN the first time if you want to lock it.<br>Each person only sees their own expenses.</div>
+  </div>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <div>
+      <h1>My Expenses</h1>
+      <div class="who">👤 <b id="who"></b> · <button class="link" id="switchBtn">Switch user</button></div>
+    </div>
+    <button class="theme" id="theme" title="Toggle theme">🌙</button>
+  </header>
+
+  <div class="month">
+    <button id="prev">◀</button><b id="mlabel"></b><button id="next">▶</button>
+  </div>
+
+  <div class="card total">
+    <small>Total spent</small>
+    <div class="amt" id="total">₹0</div>
+    <div class="count" id="count">0 expenses</div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <input id="amount" type="number" min="0" inputmode="decimal" placeholder="Amount (₹)">
+      <select id="category"></select>
+    </div>
+    <div class="row">
+      <input id="note" type="text" placeholder="Note (optional)">
+      <input id="date" type="date" style="width:150px;flex:none">
+    </div>
+    <div class="bhead" style="margin-bottom:12px">
+      <button class="link" id="addCat">+ New category</button>
+      <button class="link" id="cancelEdit" hidden>Cancel edit</button>
+    </div>
+    <button class="add" id="addBtn">+ Add expense</button>
+  </div>
+
+  <div class="card">
+    <div class="bhead"><h2>Monthly budget</h2><button class="link" id="setBudget">Set budget</button></div>
+    <div class="track"><div class="fill" id="bfill" style="width:0"></div></div>
+    <div class="bnum" id="bnum">No budget set</div>
+  </div>
+
+  <div class="card"><h2>By category</h2><div id="cats"></div></div>
+  <div class="card"><h2>Recent</h2><div id="list"></div></div>
+
+  <div class="tools">
+    <button class="clear" id="exportBtn">⬇ Export backup</button>
+    <button class="clear" id="importBtn">⬆ Import backup</button>
+    <button class="clear" id="clearBtn">Clear all data</button>
+  </div>
+  <input type="file" id="file" accept=".json" hidden>
+</div>
+
+<script>
+  const OLD = 'simple-expenses-v1', TKEY = 'simple-expenses-theme', UKEY = 'simple-expenses-users', DKEY = 'simple-expenses-data:';
+  const DEFAULT_CATS = ['🍔 Food', '🚌 Travel', '🛍️ Shopping', '🏠 Bills', '🎬 Fun', '💊 Health', '📦 Other'];
+  let expenses = [], budget = 0, user = null, cats = DEFAULT_CATS.slice(), editing = null;
+
+  const hash = str => { let h = 5381; for (const c of str) h = ((h << 5) + h + c.charCodeAt(0)) >>> 0; return String(h); };
+  const getUsers = () => { try { return JSON.parse(localStorage.getItem(UKEY)) || {}; } catch (e) { return {}; } };
+  const putUsers = u => { try { localStorage.setItem(UKEY, JSON.stringify(u)); } catch (e) {} };
+  const save = () => { if (!user) return; try { localStorage.setItem(DKEY + user.id, JSON.stringify({ expenses, budget, cats })); } catch (e) {} };
+  const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  const $ = id => document.getElementById(id);
+  const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  // theme: light by default, remembered
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    $('theme').textContent = t === 'dark' ? '☀️' : '🌙';
+    try { localStorage.setItem(TKEY, t); } catch (e) {}
+  }
+  let saved = 'light';
+  try { saved = localStorage.getItem(TKEY) || 'light'; } catch (e) {}
+  setTheme(saved);
+  $('theme').onclick = () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+
+  // in-page dialog (browser prompt/confirm are blocked in some previews)
+  function ask(text, o = {}) {
+    return new Promise(res => {
+      const i = $('minput');
+      $('mtext').textContent = text;
+      i.hidden = !o.input; i.value = o.value || '';
+      $('mcancel').hidden = !!o.alert;
+      $('modal').hidden = false;
+      if (o.input) setTimeout(() => i.focus(), 30);
+      const done = v => { $('modal').hidden = true; $('mok').onclick = $('mcancel').onclick = i.onkeydown = null; res(v); };
+      $('mok').onclick = () => done(o.input ? i.value : true);
+      $('mcancel').onclick = () => done(null);
+      i.onkeydown = e => { if (e.key === 'Enter') done(i.value); if (e.key === 'Escape') done(null); };
+    });
+  }
+
+  // month + budget state
+  const mk = ts => { const d = new Date(ts); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+  const nowKey = mk(Date.now());
+  const dt = e => e.date || e.id;
+  let view = nowKey;
+  const mname = k => new Date(k + '-01T00:00').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+  const shift = n => { const [y, m] = view.split('-').map(Number); const d = new Date(y, m - 1 + n, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+
+  function render() {
+    const list = expenses.filter(e => mk(dt(e)) === view);
+    const total = list.reduce((s, e) => s + e.amount, 0);
+    $('mlabel').textContent = mname(view);
+    $('next').disabled = view >= nowKey;
+    $('total').textContent = fmt(total);
+    $('count').textContent = list.length + (list.length === 1 ? ' expense' : ' expenses') + ' this month';
+
+    // budget
+    const f = $('bfill');
+    if (budget > 0) {
+      const pct = total / budget * 100;
+      f.style.width = Math.min(pct, 100) + '%';
+      f.className = 'fill' + (pct >= 100 ? ' over' : pct >= 80 ? ' warn' : '');
+      $('bnum').textContent = pct >= 100
+        ? fmt(total - budget) + ' over your ' + fmt(budget) + ' budget'
+        : fmt(budget - total) + ' left of ' + fmt(budget);
+      $('setBudget').textContent = 'Edit';
+    } else {
+      f.style.width = '0'; $('bnum').textContent = 'No budget set'; $('setBudget').textContent = 'Set budget';
+    }
+
+    const sums = {};
+    list.forEach(e => sums[e.category] = (sums[e.category] || 0) + e.amount);
+    const entries = Object.entries(sums).sort((a, b) => b[1] - a[1]);
+    $('cats').innerHTML = entries.length
+      ? entries.map(([c, v]) => `
+        <div class="bar">
+          <div class="top"><span>${c}</span><b>${fmt(v)}</b></div>
+          <div class="track"><div class="fill" style="width:${(v / total * 100).toFixed(1)}%"></div></div>
+        </div>`).join('')
+      : '<div class="empty">Nothing yet</div>';
+
+    $('list').innerHTML = list.length
+      ? list.slice().sort((a, b) => dt(b) - dt(a) || b.id - a.id).map(e => `
+        <div class="item">
+          <div class="ico">${e.category.split(' ')[0]}</div>
+          <div class="info">
+            <b>${esc(e.note || e.category.split(' ').slice(1).join(' '))}</b>
+            <span>${new Date(dt(e)).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+          </div>
+          <div class="price">${fmt(e.amount)}</div>
+          <button class="del ed" data-edit="${e.id}" title="Edit">Edit</button><button class="del" data-id="${e.id}" title="Delete">✕</button>
+        </div>`).join('')
+      : '<div class="empty">No expenses this month ✨</div>';
+  }
+
+  $('prev').onclick = () => { view = shift(-1); render(); };
+  $('next').onclick = () => { if (view < nowKey) { view = shift(1); render(); } };
+
+  $('setBudget').onclick = async () => {
+    const v = await ask('Monthly budget in ₹ (0 to remove):', { input: true, value: budget || '' });
+    if (v === null) return;
+    budget = Math.max(0, parseFloat(v) || 0);
+    save(); render();
+  };
+
+  const dstr = (ts = Date.now()) => { const d = new Date(ts); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const fillCats = () => { $('category').innerHTML = cats.map(c => `<option>${esc(c)}</option>`).join(''); };
+
+  function resetForm() {
+    editing = null;
+    $('amount').value = ''; $('note').value = '';
+    $('date').value = dstr(); $('date').max = dstr();
+    $('addBtn').textContent = '+ Add expense'; $('cancelEdit').hidden = true;
+  }
+
+  function startEdit(id) {
+    const x = expenses.find(z => z.id === id); if (!x) return;
+    if (!cats.includes(x.category)) { cats.push(x.category); save(); fillCats(); }
+    editing = id;
+    $('amount').value = x.amount; $('category').value = x.category;
+    $('note').value = x.note || ''; $('date').value = dstr(dt(x));
+    $('addBtn').textContent = 'Save changes'; $('cancelEdit').hidden = false;
+    $('amount').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('amount').focus();
+  }
+
+  $('addBtn').onclick = () => {
+    const amount = parseFloat($('amount').value);
+    if (!amount || amount <= 0) { $('amount').focus(); return; }
+    const t = new Date(($('date').value || dstr()) + 'T12:00').getTime() || Date.now();
+    const rec = { amount, category: $('category').value, note: $('note').value.trim(), date: t };
+    if (editing) { const x = expenses.find(z => z.id === editing); if (x) Object.assign(x, rec); }
+    else expenses.push({ id: Date.now(), ...rec });
+    save(); view = mk(t); resetForm(); render();
+  };
+  $('cancelEdit').onclick = resetForm;
+
+  $('addCat').onclick = async () => {
+    let n = await ask('New category name (add an emoji if you like, e.g. 🎁 Gifts):', { input: true });
+    if (!n) return;
+    n = n.trim().slice(0, 20); if (!n) return;
+    if (!/^\p{Extended_Pictographic}/u.test(n)) n = '🏷️ ' + n;
+    if (!cats.includes(n)) { cats.push(n); save(); fillCats(); }
+    $('category').value = n;
+  };
+
+  $('list').onclick = e => {
+    const t = e.target;
+    if (t.dataset.edit) { startEdit(Number(t.dataset.edit)); return; }
+    if (t.dataset.id) {
+      const id = Number(t.dataset.id);
+      expenses = expenses.filter(x => x.id !== id);
+      if (editing === id) resetForm();
+      save(); render();
+    }
+  };
+  $('clearBtn').onclick = async () => {
+    if (expenses.length && await ask('Delete ALL your expenses from every month?')) { expenses = []; save(); render(); }
+  };
+
+  // backup
+  $('exportBtn').onclick = () => {
+    const blob = new Blob([JSON.stringify({ expenses, budget, cats }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'expenses-' + user.id + '-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click(); URL.revokeObjectURL(a.href);
+  };
+  $('importBtn').onclick = () => $('file').click();
+  $('file').onchange = e => {
+    const file = e.target.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = async () => {
+      try {
+        const d = JSON.parse(r.result);
+        if (!Array.isArray(d.expenses)) throw 0;
+        if (!(await ask('Replace current data with this backup (' + d.expenses.length + ' expenses)?'))) return;
+        expenses = d.expenses; budget = Number(d.budget) || 0;
+        if (Array.isArray(d.cats) && d.cats.length) cats = d.cats;
+        fillCats();
+        save(); render();
+      } catch (x) { ask('That file is not a valid backup.', { alert: true }); }
+    };
+    r.readAsText(file); e.target.value = '';
+  };
+  [$('amount'), $('note')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') $('addBtn').click(); }));
+
+  // ---------- users ----------
+  function openUser(id, name) {
+    user = { id, name };
+    try { sessionStorage.setItem('simple-expenses-session', JSON.stringify(user)); } catch (e) {}
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(DKEY + id)); } catch (e) {}
+    expenses = (d && d.expenses) || []; budget = (d && Number(d.budget)) || 0;
+    cats = (d && Array.isArray(d.cats) && d.cats.length) ? d.cats : DEFAULT_CATS.slice();
+    fillCats(); resetForm();
+    view = nowKey;
+    $('who').textContent = name;
+    $('login').hidden = true; $('app').hidden = false;
+    render();
+  }
+
+  function login() {
+    const name = $('uname').value.trim(), pin = $('upin').value.trim(), err = $('err');
+    err.textContent = '';
+    if (!name) { err.textContent = 'Please type your name'; return; }
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), users = getUsers(), u = users[id];
+    if (u) {
+      if (u.pin && u.pin !== hash(id + pin)) { err.textContent = pin ? 'Wrong PIN' : 'This profile needs its PIN'; return; }
+    } else {
+      if (pin && !/^\d{4}$/.test(pin)) { err.textContent = 'PIN must be exactly 4 digits'; return; }
+      users[id] = { name, pin: pin ? hash(id + pin) : '' };
+      putUsers(users);
+      // first user adopts any data saved before profiles existed
+      if (Object.keys(users).length === 1) {
+        try {
+          const old = localStorage.getItem(OLD), ob = Number(localStorage.getItem('simple-expenses-budget')) || 0;
+          if (old) { localStorage.setItem(DKEY + id, JSON.stringify({ expenses: JSON.parse(old) || [], budget: ob })); }
+        } catch (e) {}
+      }
+    }
+    $('uname').value = ''; $('upin').value = '';
+    openUser(id, users[id].name);
+  }
+
+  $('goBtn').onclick = login;
+  [$('uname'), $('upin')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') login(); }));
+  $('switchBtn').onclick = () => {
+    user = null; expenses = []; budget = 0;
+    try { sessionStorage.removeItem('simple-expenses-session'); } catch (e) {}
+    $('app').hidden = true; $('login').hidden = false; $('uname').focus();
+  };
+
+  // resume this tab's session (PIN already entered), otherwise show login
+  let sess = null;
+  try { sess = JSON.parse(sessionStorage.getItem('simple-expenses-session')); } catch (e) {}
+  if (sess && getUsers()[sess.id]) openUser(sess.id, getUsers()[sess.id].name);
+  else $('login').hidden = false;
+</script>
+</body>
+</html>
